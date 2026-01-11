@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa"/>
+      <stop offset="100%" style="stop-color:#e9ecef"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="200" height="80" rx="8" fill="url(#bgGrad)" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- Visa -->
+  <rect x="10" y="20" width="40" height="25" rx="3" fill="#1A1F71"/>
+  <text x="30" y="36" font-family="Arial, sans-serif" font-weight="bold" font-size="8" fill="#fff" text-anchor="middle">VISA</text>
+
+  <!-- Mastercard -->
+  <rect x="55" y="20" width="40" height="25" rx="3" fill="#000"/>
+  <circle cx="70" cy="32" r="7" fill="#EB001B"/>
+  <circle cx="80" cy="32" r="7" fill="#F79E1B"/>
+
+  <!-- PayPal -->
+  <rect x="100" y="20" width="40" height="25" rx="3" fill="#fff" stroke="#ddd"/>
+  <text x="120" y="30" font-family="Arial, sans-serif" font-weight="bold" font-size="6" fill="#003087" text-anchor="middle">Pay</text>
+  <text x="120" y="38" font-family="Arial, sans-serif" font-weight="bold" font-size="6" fill="#009CDE" text-anchor="middle">Pal</text>
+
+  <!-- CB -->
+  <rect x="145" y="20" width="40" height="25" rx="3" fill="#fff" stroke="#ddd"/>
+  <rect x="150" y="26" width="30" height="6" rx="1" fill="#00A651"/>
+  <rect x="150" y="32" width="30" height="6" rx="1" fill="#00529B"/>
+
+  <!-- Text -->
+  <text x="100" y="60" font-family="Arial, sans-serif" font-size="9" fill="#495057" text-anchor="middle">CAWL Payment Gateway</text>
+  <text x="100" y="72" font-family="Arial, sans-serif" font-size="7" fill="#6c757d" text-anchor="middle">Secure Online Payments</text>
+</svg>

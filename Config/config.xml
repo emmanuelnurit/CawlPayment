@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://thelia.net/schema/dic/config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://thelia.net/schema/dic/config
+                            http://thelia.net/schema/dic/config/thelia-module.xsd">
+
+    <loops>
+        <loop name="cawl_transaction" class="CawlPayment\Loop\CawlTransactionLoop" />
+        <loop name="cawl_payment_method" class="CawlPayment\Loop\PaymentMethodLoop" />
+    </loops>
+
+    <forms>
+        <form name="cawlpayment.configuration" class="CawlPayment\Form\ConfigurationForm" />
+    </forms>
+
+    <hooks>
+        <hook id="cawlpayment.hook.admin" class="CawlPayment\Hook\AdminHook">
+            <tag name="hook.event_listener" event="module.configuration" type="back" method="onModuleConfiguration" />
+        </hook>
+        <hook id="cawlpayment.hook.front" class="CawlPayment\Hook\FrontHook">
+            <tag name="hook.event_listener" event="order-invoice.payment-extra" type="front" method="onPaymentExtra" />
+        </hook>
+    </hooks>
+
+    <services>
+        <service id="cawlpayment.api.service" class="CawlPayment\Service\CawlApiService" scope="request">
+        </service>
+        <service id="cawlpayment.event_listener.payment_options" class="CawlPayment\EventListeners\PaymentOptionsListener">
+            <argument type="service" id="OpenApi\Model\Api\ModelFactory"/>
+            <tag name="kernel.event_subscriber" />
+        </service>
+
+        <!-- Front Controllers -->
+        <service id="CawlPayment\Controller\Front\PaymentController" class="CawlPayment\Controller\Front\PaymentController" public="true">
+            <argument type="service" id="event_dispatcher"/>
+            <tag name="controller.service_arguments"/>
+        </service>
+        <service id="CawlPayment\Controller\Front\WebhookController" class="CawlPayment\Controller\Front\WebhookController" public="true">
+            <argument type="service" id="event_dispatcher"/>
+            <tag name="controller.service_arguments"/>
+        </service>
+    </services>
+
+</config>

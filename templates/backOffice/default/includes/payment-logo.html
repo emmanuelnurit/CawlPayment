@@ -1,0 +1,42 @@
+{* Payment method logos - SVG inline for maximum compatibility *}
+{if $method == 'visa'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#1A1F71"/><path d="M19.5 21h-2.8l1.8-11h2.8l-1.8 11zm-5.6 0l-2.7-7.5-.3-1.5c-.5-1.3-1.6-2-3-2h-.4l4.2 11h2.9l4.4-11h-2.9l-2.2 11zm18.1-7.1c0-.8.7-1.4 1.8-1.4.8 0 1.6.2 2.1.6l.4-2.3c-.6-.2-1.4-.4-2.3-.4-2.4 0-4.1 1.3-4.1 3.1 0 1.4 1.2 2.1 2.2 2.6.9.5 1.2.8 1.2 1.3 0 .7-.7 1-1.4 1-.9 0-1.9-.3-2.5-.6l-.4 2.3c.7.3 1.7.5 2.8.5 2.5 0 4.2-1.2 4.2-3.2 0-2.5-3.5-2.6-3.5-3.5h.5zm11.5 7.1l.5-3h2.5l.5-2.2h-2.5l.3-1.6h2.8l.5-2.2h-5.5l-1.8 11h2.7l-.5 3h2.5l.5-2.2h-2.5z" fill="#F7B600"/></svg>
+{elseif $method == 'mastercard'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#000"/><circle cx="19" cy="16" r="8" fill="#EB001B"/><circle cx="29" cy="16" r="8" fill="#F79E1B"/><path d="M24 9.8a8 8 0 0 0 0 12.4 8 8 0 0 0 0-12.4z" fill="#FF5F00"/></svg>
+{elseif $method == 'cb'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="8" y="10" width="32" height="6" rx="1" fill="#00A651"/><rect x="8" y="16" width="32" height="6" rx="1" fill="#00529B"/><text x="24" y="26" font-family="Arial" font-size="5" fill="#333" text-anchor="middle">CB</text></svg>
+{elseif $method == 'amex'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#016FD0"/><text x="24" y="18" font-family="Arial" font-weight="bold" font-size="8" fill="#fff" text-anchor="middle">AMEX</text></svg>
+{elseif $method == 'maestro'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><circle cx="17" cy="16" r="7" fill="#0099DF"/><circle cx="31" cy="16" r="7" fill="#ED0006"/><path d="M24 10.5a7 7 0 0 0 0 11 7 7 0 0 0 0-11z" fill="#6C6BBD"/></svg>
+{elseif $method == 'applepay'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#000"/><path d="M16.2 11.5c-.8.9-1.9.8-1.9.8s-.1-1 .6-1.9c.8-.9 1.8-.8 1.8-.8s.1 1-.5 1.9zm.5 1c-1.1 0-1.9.6-2.4.6-.5 0-1.3-.6-2.1-.6-1.1 0-2.1.6-2.6 1.6-1.1 1.9-.3 4.8.8 6.4.5.8 1.2 1.6 2 1.6s1.1-.5 2.1-.5 1.3.5 2.1.5 1.4-.8 1.9-1.5c.6-.9.9-1.7.9-1.8 0 0-1.7-.7-1.7-2.6 0-1.6 1.3-2.4 1.4-2.5-.8-1.2-2-1.2-2.4-1.2z" fill="#fff"/><text x="32" y="18" font-family="Arial" font-size="6" fill="#fff" text-anchor="middle">Pay</text></svg>
+{elseif $method == 'googlepay'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><path d="M24.2 16.6v3.4h-1.1v-8.4h2.8c.7 0 1.3.2 1.8.7.5.5.7 1 .7 1.7s-.2 1.2-.7 1.7c-.5.5-1.1.7-1.8.7h-1.7v.2zm0-3.9v2.7h1.8c.4 0 .8-.2 1-.5.3-.3.4-.6.4-1s-.1-.7-.4-1c-.3-.3-.6-.4-1-.4h-1.8v.2z" fill="#5F6368"/><path d="M32.2 14c.8 0 1.5.2 2 .7.5.5.8 1.1.8 1.9v4h-1v-.9h0c-.5.7-1.1 1.1-1.9 1.1-.7 0-1.3-.2-1.7-.6-.4-.4-.7-.9-.7-1.5 0-.7.2-1.2.7-1.6.5-.4 1.1-.6 1.9-.6.7 0 1.2.1 1.6.4v-.3c0-.4-.2-.8-.5-1.1-.3-.3-.7-.5-1.2-.5-.7 0-1.2.3-1.6.9l-1-.6c.6-.9 1.5-1.3 2.6-1.3zm-1.4 4.7c0 .3.1.6.4.8.3.2.6.4.9.4.5 0 1-.2 1.4-.6.4-.4.6-.9.6-1.4-.4-.3-.9-.4-1.5-.4-.5 0-.9.1-1.2.4-.4.2-.6.5-.6.8z" fill="#5F6368"/><path d="M39.8 14.2l-3.5 8.1h-1.1l1.3-2.8-2.3-5.3h1.2l1.6 4h0l1.6-4h1.2z" fill="#5F6368"/><path d="M16.8 15.8c0-.4 0-.7-.1-1h-4.9v1.9h2.8c-.1.6-.4 1.1-.9 1.5v1.2h1.5c.9-.8 1.4-2 1.6-3.6z" fill="#4285F4"/><path d="M11.8 20.5c1.2 0 2.3-.4 3-1.1l-1.5-1.2c-.4.3-1 .5-1.5.5-1.2 0-2.2-.8-2.5-1.9H7.8v1.2c.8 1.5 2.3 2.5 4 2.5z" fill="#34A853"/><path d="M9.3 16.8c-.1-.3-.2-.6-.2-.9s.1-.6.2-.9v-1.2H7.8c-.3.6-.5 1.4-.5 2.1s.2 1.5.5 2.1l1.5-1.2z" fill="#FBBC04"/><path d="M11.8 12.1c.7 0 1.3.2 1.8.7l1.3-1.3c-.8-.8-1.9-1.2-3.1-1.2-1.7 0-3.2 1-4 2.5l1.5 1.2c.3-1.1 1.3-1.9 2.5-1.9z" fill="#EA4335"/></svg>
+{elseif $method == 'paypal'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><path d="M17.8 9h4.3c2.3 0 3.9 1.4 3.5 3.8-.4 2.8-2.3 4.3-4.8 4.3h-1.1c-.4 0-.7.3-.8.7l-.6 3.8c0 .2-.2.4-.5.4h-2.2c-.3 0-.4-.2-.4-.4l1.6-10.2c.1-.3.3-.4.5-.4h.5z" fill="#003087"/><path d="M27.2 9h4.3c2.3 0 3.9 1.4 3.5 3.8-.4 2.8-2.3 4.3-4.8 4.3h-1.1c-.4 0-.7.3-.8.7l-.6 3.8c0 .2-.2.4-.5.4h-2.2c-.3 0-.4-.2-.4-.4l1.6-10.2c.1-.3.3-.4.5-.4h.5z" fill="#0070BA"/></svg>
+{elseif $method == 'wechatpay'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#07C160"/><text x="24" y="18" font-family="Arial" font-weight="bold" font-size="6" fill="#fff" text-anchor="middle">WeChat</text></svg>
+{elseif $method == 'ideal'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="10" y="8" width="28" height="16" rx="2" fill="#CC0066"/><text x="24" y="19" font-family="Arial" font-weight="bold" font-size="7" fill="#fff" text-anchor="middle">iDEAL</text></svg>
+{elseif $method == 'bancontact'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><circle cx="18" cy="16" r="6" fill="#005498"/><circle cx="30" cy="16" r="6" fill="#FFCC00"/><text x="24" y="27" font-family="Arial" font-size="5" fill="#005498" text-anchor="middle">Bancontact</text></svg>
+{elseif $method == 'przelewy24'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><text x="24" y="18" font-family="Arial" font-weight="bold" font-size="8" fill="#D13239" text-anchor="middle">P24</text></svg>
+{elseif $method == 'eps'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="10" y="10" width="28" height="12" rx="2" fill="#9E1F63"/><text x="24" y="19" font-family="Arial" font-weight="bold" font-size="8" fill="#fff" text-anchor="middle">eps</text></svg>
+{elseif $method == 'giropay'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="8" y="10" width="32" height="12" rx="2" fill="#000268"/><text x="24" y="19" font-family="Arial" font-weight="bold" font-size="7" fill="#fff" text-anchor="middle">giropay</text></svg>
+{elseif $method == 'klarna_paynow' || $method == 'klarna_paylater' || $method == 'klarna_sliceit'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#FFB3C7"/><text x="24" y="18" font-family="Arial" font-weight="bold" font-size="8" fill="#0A0B09" text-anchor="middle">Klarna</text></svg>
+{elseif $method == 'oney3x' || $method == 'oney4x'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="10" y="10" width="28" height="12" rx="2" fill="#3AB54A"/><text x="24" y="19" font-family="Arial" font-weight="bold" font-size="8" fill="#fff" text-anchor="middle">Oney</text></svg>
+{elseif $method == 'edenred'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="8" y="10" width="32" height="12" rx="2" fill="#E60000"/><text x="24" y="19" font-family="Arial" font-weight="bold" font-size="6" fill="#fff" text-anchor="middle">Edenred</text></svg>
+{elseif $method == 'sodexo'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="8" y="10" width="32" height="12" rx="2" fill="#ED1C24"/><text x="24" y="19" font-family="Arial" font-weight="bold" font-size="6" fill="#fff" text-anchor="middle">Sodexo</text></svg>
+{elseif $method == 'updejeuner'}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#fff" stroke="#ddd"/><rect x="8" y="10" width="32" height="12" rx="2" fill="#003DA5"/><text x="24" y="19" font-family="Arial" font-weight="bold" font-size="5" fill="#fff" text-anchor="middle">Up Dejeuner</text></svg>
+{else}
+<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#f5f5f5" stroke="#ddd"/><text x="24" y="18" font-family="Arial" font-size="8" fill="#999" text-anchor="middle">?</text></svg>
+{/if}

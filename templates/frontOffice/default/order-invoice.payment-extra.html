@@ -1,0 +1,54 @@
+<style>
+.cawl-payment-methods {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+.cawl-payment-methods-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+}
+.cawl-methods-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.cawl-method-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-width: 50px;
+    height: 32px;
+}
+.cawl-method-icon img {
+    max-height: 24px;
+    max-width: 48px;
+    object-fit: contain;
+}
+.cawl-method-icon span {
+    font-size: 10px;
+    font-weight: 500;
+    color: #333;
+}
+</style>
+
+<div class="cawl-payment-methods">
+    <div class="cawl-payment-methods-label">{intl d='cawlpayment' l='Available payment methods:'}</div>
+    <div class="cawl-methods-grid">
+        {foreach from=$enabled_methods key=method_code item=method}
+            <div class="cawl-method-icon" title="{$method.name}">
+                {if $method.logo}
+                    <img src="{$method.logo}" alt="{$method.name}">
+                {else}
+                    <span>{$method.name|truncate:12}</span>
+                {/if}
+            </div>
+        {/foreach}
+    </div>
+</div>

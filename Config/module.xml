@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="http://thelia.net/schema/dic/module"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://thelia.net/schema/dic/module
+                            http://thelia.net/schema/dic/module/module-2_1.xsd">
+
+    <fullnamespace>CawlPayment\CawlPayment</fullnamespace>
+
+    <descriptive locale="en_US">
+        <title>CAWL Payment</title>
+        <subtitle>Accept payments with CAWL Solutions</subtitle>
+        <description>CAWL Solutions payment gateway integration for Thelia. Supports 30+ payment methods including Visa, Mastercard, Apple Pay, Google Pay, Klarna, and more.</description>
+    </descriptive>
+
+    <descriptive locale="fr_FR">
+        <title>CAWL Payment</title>
+        <subtitle>Accepter les paiements avec CAWL Solutions</subtitle>
+        <description>Intégration de la passerelle de paiement CAWL Solutions pour Thelia. Supporte plus de 30 méthodes de paiement : Visa, Mastercard, Apple Pay, Google Pay, Klarna, et bien d'autres.</description>
+    </descriptive>
+
+    <languages>
+        <language>en_US</language>
+        <language>fr_FR</language>
+    </languages>
+
+    <version>1.0.0</version>
+
+    <authors>
+        <author>
+            <name>Thelia Developer</name>
+            <email>dev@example.com</email>
+        </author>
+    </authors>
+
+    <type>payment</type>
+
+    <thelia>2.6.0</thelia>
+
+    <stability>prod</stability>
+
+</module>

@@ -1,0 +1,12 @@
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Subfolder with separate repo
+cawl/
+
+# Vendor
+vendor/

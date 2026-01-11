@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database defaultIdMethod="native" name="TheliaMain"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="../../../../vendor/thelia/propel/resources/xsd/database.xsd">
+
+    <table name="cawl_transaction" namespace="CawlPayment\Model">
+        <column autoIncrement="true" name="id" primaryKey="true" required="true" type="INTEGER"/>
+        <column name="order_id" required="true" type="INTEGER"/>
+        <column name="payment_method" size="50" type="VARCHAR"/>
+        <column name="hosted_checkout_id" size="255" type="VARCHAR"/>
+        <column name="transaction_ref" size="255" type="VARCHAR"/>
+        <column name="amount" scale="2" size="10" type="DECIMAL"/>
+        <column defaultValue="EUR" name="currency" size="3" type="VARCHAR"/>
+        <column defaultValue="pending" name="status" size="50" type="VARCHAR"/>
+        <column name="status_code" type="INTEGER"/>
+        <column name="raw_request" type="CLOB"/>
+        <column name="raw_response" type="CLOB"/>
+        <column name="error_message" size="500" type="VARCHAR"/>
+
+        <foreign-key foreignTable="order" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="order_id"/>
+        </foreign-key>
+
+        <index name="idx_cawl_order_id">
+            <index-column name="order_id"/>
+        </index>
+        <index name="idx_cawl_hosted_checkout_id">
+            <index-column name="hosted_checkout_id"/>
+        </index>
+        <index name="idx_cawl_transaction_ref">
+            <index-column name="transaction_ref"/>
+        </index>
+        <index name="idx_cawl_status">
+            <index-column name="status"/>
+        </index>
+
+        <behavior name="timestampable"/>
+    </table>
+
+    <external-schema filename="local/config/schema.xml" referenceOnly="true"/>
+</database>

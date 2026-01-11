@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50">
+  <rect width="80" height="50" rx="4" fill="#1AAD19"/>
+  <text x="40" y="28" font-family="Arial, sans-serif" font-weight="bold" font-size="10" fill="#fff" text-anchor="middle">WeChat</text>
+  <text x="40" y="38" font-family="Arial, sans-serif" font-weight="bold" font-size="10" fill="#fff" text-anchor="middle">Pay</text>
+</svg>

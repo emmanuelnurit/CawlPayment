@@ -1,0 +1,228 @@
+<?php
+
+declare(strict_types=1);
+
+namespace CawlPayment\Controller\Front;
+
+use CawlPayment\CawlPayment;
+use CawlPayment\Model\CawlTransactionQuery;
+use CawlPayment\Service\CawlApiService;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Thelia\Controller\Front\BaseFrontController;
+use Thelia\Core\Event\Order\OrderEvent;
+use Thelia\Core\Event\TheliaEvents;
+use Thelia\Model\OrderQuery;
+use Thelia\Model\OrderStatusQuery;
+use Thelia\Tools\URL;
+
+/**
+ * Frontend payment controller for CAWL Payment
+ */
+class PaymentController extends BaseFrontController
+{
+    private EventDispatcherInterface $dispatcher;
+
+    public function __construct(EventDispatcherInterface $dispatcher)
+    {
+        $this->dispatcher = $dispatcher;
+    }
+    /**
+     * Initiate payment process
+     */
+    public function payAction(Request $request, int $orderId, string $methodCode): Response
+    {
+        // Get order
+        $order = OrderQuery::create()->findPk($orderId);
+
+        if (!$order) {
+            return $this->pageNotFound();
+        }
+
+        // Verify order belongs to current customer
+        $customer = $this->getSecurityContext()->getCustomerUser();
+        if (!$customer || $order->getCustomerId() !== $customer->getId()) {
+            return $this->pageNotFound();
+        }
+
+        // Verify this is our payment module
+        $module = new CawlPayment();
+        if ($order->getPaymentModuleId() !== $module->getModuleModel()->getId()) {
+            return $this->pageNotFound();
+        }
+
+        // Verify payment method is enabled
+        if (!$module->isPaymentMethodEnabled($methodCode)) {
+            return new RedirectResponse(
+                URL::getInstance()->absoluteUrl('/order/failed/' . $orderId, ['error' => 'Invalid payment method'])
+            );
+        }
+
+        try {
+            // Create API service
+            $apiService = new CawlApiService();
+
+            // Build return URLs
+            $baseUrl = URL::getInstance()->absoluteUrl('');
+            $returnUrl = $baseUrl . '/cawlpayment/success?order_id=' . $orderId;
+            $webhookUrl = $baseUrl . '/cawlpayment/webhook';
+
+            // Create hosted checkout
+            $response = $apiService->createHostedCheckout($order, $methodCode, $returnUrl, $webhookUrl);
+
+            if (!isset($response['hostedCheckoutId']) || !isset($response['RETURNMAC'])) {
+                throw new \Exception('Invalid response from CAWL API');
+            }
+
+            // Build checkout URL and redirect
+            $checkoutUrl = $apiService->getCheckoutUrl($response['hostedCheckoutId'], $response['RETURNMAC']);
+
+            return new RedirectResponse($checkoutUrl);
+
+        } catch (\Exception $e) {
+            // Log error using Thelia logger
+            \Thelia\Log\Tlog::getInstance()->error('[CawlPayment] Payment initiation error: ' . $e->getMessage());
+
+            // Redirect to failure page with generic error message (don't expose internal details)
+            return new RedirectResponse(
+                URL::getInstance()->absoluteUrl('/order/failed/' . $orderId, ['error' => urlencode('Payment initialization failed')])
+            );
+        }
+    }
+
+    /**
+     * Handle success return from CAWL
+     */
+    public function successAction(Request $request): Response
+    {
+        $orderId = $request->query->get('order_id');
+        $hostedCheckoutId = $request->query->get('hostedCheckoutId');
+
+        if (!$orderId) {
+            return $this->pageNotFound();
+        }
+
+        $order = OrderQuery::create()->findPk($orderId);
+        if (!$order) {
+            return $this->pageNotFound();
+        }
+
+        try {
+            // Get payment status from CAWL
+            $apiService = new CawlApiService();
+
+            // Find hosted checkout ID from transaction
+            $transaction = CawlTransactionQuery::create()
+                ->filterByOrderId($orderId)
+                ->orderByCreatedAt('desc')
+                ->findOne();
+
+            if ($transaction && $transaction->getHostedCheckoutId()) {
+                $statusResponse = $apiService->getHostedCheckoutStatus($transaction->getHostedCheckoutId());
+
+                // Check if payment is successful
+                if (isset($statusResponse['isPaid']) && $statusResponse['isPaid']) {
+                    // Update order status to PAID
+                    $this->confirmPayment($order, $statusResponse['paymentId'] ?? $transaction->getTransactionRef());
+                }
+            }
+
+            // Redirect to order confirmation
+            return new RedirectResponse(
+                URL::getInstance()->absoluteUrl('/order/placed/' . $orderId)
+            );
+
+        } catch (\Exception $e) {
+            \Thelia\Log\Tlog::getInstance()->error('[CawlPayment] Success callback error: ' . $e->getMessage());
+
+            // Still redirect to order placed, webhook will handle final status
+            return new RedirectResponse(
+                URL::getInstance()->absoluteUrl('/order/placed/' . $orderId)
+            );
+        }
+    }
+
+    /**
+     * Handle failure return from CAWL
+     */
+    public function failureAction(Request $request): Response
+    {
+        $orderId = $request->query->get('order_id');
+        $message = $request->query->get('message', 'Payment failed');
+
+        if (!$orderId) {
+            return $this->pageNotFound();
+        }
+
+        return new RedirectResponse(
+            URL::getInstance()->absoluteUrl('/order/failed/' . $orderId, ['error' => urlencode($message)])
+        );
+    }
+
+    /**
+     * Handle cancel return from CAWL
+     */
+    public function cancelAction(Request $request): Response
+    {
+        $orderId = $request->query->get('order_id');
+
+        if (!$orderId) {
+            return $this->pageNotFound();
+        }
+
+        return new RedirectResponse(
+            URL::getInstance()->absoluteUrl('/order/failed/' . $orderId, ['error' => urlencode('Payment cancelled')])
+        );
+    }
+
+    /**
+     * Get payment status (AJAX)
+     */
+    public function statusAction(Request $request, string $hostedCheckoutId): JsonResponse
+    {
+        try {
+            $apiService = new CawlApiService();
+
+            $status = $apiService->getHostedCheckoutStatus($hostedCheckoutId);
+
+            return new JsonResponse([
+                'success' => true,
+                'status' => $status['status'] ?? 'unknown',
+                'is_paid' => isset($status['status']) && $apiService->isSuccessStatus($status['status']),
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Confirm payment and update order status
+     */
+    private function confirmPayment($order, ?string $transactionRef = null): void
+    {
+        // Get paid status
+        $paidStatus = OrderStatusQuery::getPaidStatus();
+
+        if (!$paidStatus) {
+            throw new \Exception('Paid order status not found');
+        }
+
+        // Update order status using the injected dispatcher
+        $event = new OrderEvent($order);
+        $event->setStatus($paidStatus->getId());
+        $this->dispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
+
+        // Save transaction reference if provided
+        if ($transactionRef) {
+            $order->setTransactionRef($transactionRef);
+            $order->save();
+        }
+    }
+}
