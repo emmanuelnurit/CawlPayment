@@ -5,8 +5,5 @@
 .idea/
 .vscode/
 
-# Subfolder with separate repo
-cawl/
-
 # Vendor
 vendor/
