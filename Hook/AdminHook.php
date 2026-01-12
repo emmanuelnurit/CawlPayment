@@ -62,10 +62,10 @@ class AdminHook extends BaseHook
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);
         $hasProdCredentials = !empty($config['api_key_prod']) && !empty($config['api_secret_prod']);
 
-        // Get CSRF token
+        // Get CSRF token using null-safe request access
         $formToken = '';
         try {
-            $request = $this->getRequest();
+            $request = $this->requestStack?->getMainRequest();
             if ($request && $request->getSession()) {
                 $formToken = $request->getSession()->get('cawlpayment_token');
                 if (empty($formToken)) {
@@ -73,7 +73,7 @@ class AdminHook extends BaseHook
                     $request->getSession()->set('cawlpayment_token', $formToken);
                 }
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $formToken = bin2hex(random_bytes(32));
         }
 
