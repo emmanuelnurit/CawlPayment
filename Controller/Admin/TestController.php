@@ -8,21 +8,43 @@ use CawlPayment\Service\CawlApiService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
+use Thelia\Core\Security\SecurityContext;
 
 /**
  * Admin controller for CAWL Payment API testing
  */
-class TestController extends BaseAdminController
+class TestController
 {
+    public function __construct(
+        private readonly SecurityContext $securityContext
+    ) {
+    }
+
+    /**
+     * Check if user has admin access to this module
+     */
+    private function checkAdminAccess(string $access = AccessManager::VIEW): bool
+    {
+        if (!$this->securityContext->hasAdminUser()) {
+            return false;
+        }
+
+        return $this->securityContext->isGranted(
+            ['ADMIN'],
+            [AdminResources::MODULE],
+            ['CawlPayment'],
+            [$access]
+        );
+    }
+
     /**
      * Test API connection using the official SDK
      */
     public function testConnectionAction(Request $request): JsonResponse
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess()) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
@@ -32,9 +54,6 @@ class TestController extends BaseAdminController
 
             return new JsonResponse($result);
         } catch (\Exception $e) {
-            // Log the full error for debugging, but don't expose trace to client
-            \Thelia\Log\Tlog::getInstance()->error('[CawlPayment] Test connection error: ' . $e->getMessage());
-
             return new JsonResponse([
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -47,7 +66,7 @@ class TestController extends BaseAdminController
      */
     public function configurationAction(Request $request): JsonResponse
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess()) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
@@ -72,7 +91,7 @@ class TestController extends BaseAdminController
      */
     public function paymentProductsAction(Request $request): JsonResponse
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess()) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
@@ -98,7 +117,7 @@ class TestController extends BaseAdminController
      */
     public function createTestCheckoutAction(Request $request): JsonResponse
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::UPDATE)) {
+        if (!$this->checkAdminAccess(AccessManager::UPDATE)) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
@@ -123,7 +142,7 @@ class TestController extends BaseAdminController
      */
     public function checkoutStatusAction(Request $request, string $hostedCheckoutId): JsonResponse
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess()) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
@@ -145,7 +164,7 @@ class TestController extends BaseAdminController
      */
     public function paymentStatusAction(Request $request, string $paymentId): JsonResponse
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess()) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
@@ -229,7 +248,7 @@ class TestController extends BaseAdminController
      */
     public function dashboardAction(Request $request): Response
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess()) {
             return new Response('Access denied', 403);
         }
 

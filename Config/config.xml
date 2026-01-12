@@ -35,6 +35,10 @@
             <argument type="service" id="thelia.securityContext"/>
             <tag name="controller.service_arguments"/>
         </service>
+        <service id="CawlPayment\Controller\Admin\TestController" class="CawlPayment\Controller\Admin\TestController" public="true">
+            <argument type="service" id="thelia.securityContext"/>
+            <tag name="controller.service_arguments"/>
+        </service>
 
         <!-- Front Controllers -->
         <service id="CawlPayment\Controller\Front\PaymentController" class="CawlPayment\Controller\Front\PaymentController" public="true">

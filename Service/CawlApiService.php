@@ -10,7 +10,7 @@ use CawlPayment\Model\CawlTransactionQuery;
 use OnlinePayments\Sdk\Client;
 use OnlinePayments\Sdk\Communicator;
 use OnlinePayments\Sdk\CommunicatorConfiguration;
-use OnlinePayments\Sdk\Authentication\V1HmacAuthenticator;
+use OnlinePayments\Sdk\DefaultConnection;
 use OnlinePayments\Sdk\Domain\AmountOfMoney;
 use OnlinePayments\Sdk\Domain\ContactDetails;
 use OnlinePayments\Sdk\Domain\CreateHostedCheckoutRequest;
@@ -46,7 +46,7 @@ class CawlApiService
         if ($this->logger === null) {
             $this->logger = Tlog::getNewInstance();
             $this->logger->setDestinations('\\Thelia\\Log\\Destination\\TlogDestinationFile');
-            $this->logger->setConfig('\\Thelia\\Log\\Destination\\TlogDestinationFile', 0, THELIA_LOG_DIR . 'cawlpayment.log');
+            $this->logger->setConfig('\\Thelia\\Log\\Destination\\TlogDestinationFile', '0', THELIA_LOG_DIR . 'cawlpayment.log');
         }
         return $this->logger;
     }
@@ -82,8 +82,8 @@ class CawlApiService
                 'CawlPayment/1.0.0'
             );
 
-            $authenticator = new V1HmacAuthenticator($communicatorConfig);
-            $communicator = new Communicator($communicatorConfig, $authenticator);
+            $connection = new DefaultConnection();
+            $communicator = new Communicator($connection, $communicatorConfig);
             $this->client = new Client($communicator);
         }
 
