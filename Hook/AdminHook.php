@@ -65,13 +65,16 @@ class AdminHook extends BaseHook
         // Get CSRF token using null-safe request access
         $formToken = '';
         try {
-            $request = $this->requestStack?->getMainRequest();
-            if ($request && $request->getSession()) {
-                $formToken = $request->getSession()->get('cawlpayment_token');
+            $request = $this->getRequest();
+            if ($request !== null && $request->hasSession()) {
+                $session = $request->getSession();
+                $formToken = $session->get('cawlpayment_token');
                 if (empty($formToken)) {
                     $formToken = bin2hex(random_bytes(32));
-                    $request->getSession()->set('cawlpayment_token', $formToken);
+                    $session->set('cawlpayment_token', $formToken);
                 }
+            } else {
+                $formToken = bin2hex(random_bytes(32));
             }
         } catch (\Throwable $e) {
             $formToken = bin2hex(random_bytes(32));
