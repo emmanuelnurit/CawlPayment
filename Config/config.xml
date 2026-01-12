@@ -30,6 +30,12 @@
             <tag name="kernel.event_subscriber" />
         </service>
 
+        <!-- Admin Controllers -->
+        <service id="CawlPayment\Controller\Admin\ConfigurationController" class="CawlPayment\Controller\Admin\ConfigurationController" public="true">
+            <argument type="service" id="thelia.securityContext"/>
+            <tag name="controller.service_arguments"/>
+        </service>
+
         <!-- Front Controllers -->
         <service id="CawlPayment\Controller\Front\PaymentController" class="CawlPayment\Controller\Front\PaymentController" public="true">
             <argument type="service" id="event_dispatcher"/>

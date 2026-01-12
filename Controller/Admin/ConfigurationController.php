@@ -9,23 +9,47 @@ use CawlPayment\Service\CawlApiService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
+use Thelia\Core\Security\SecurityContext;
 use Thelia\Tools\URL;
 
 /**
  * Admin controller for CAWL Payment configuration
  */
-class ConfigurationController extends BaseAdminController
+class ConfigurationController
 {
+    public function __construct(
+        private readonly SecurityContext $securityContext
+    ) {
+    }
+
+    /**
+     * Check if user has admin access to this module
+     */
+    private function checkAdminAccess(string $access = AccessManager::UPDATE): bool
+    {
+        if (!$this->securityContext->hasAdminUser()) {
+            return false;
+        }
+
+        return $this->securityContext->isGranted(
+            ['ADMIN'],
+            [AdminResources::MODULE],
+            ['CawlPayment'],
+            [$access]
+        );
+    }
+
     /**
      * Save configuration
      */
     public function saveAction(Request $request): RedirectResponse
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::UPDATE)) {
-            return $response;
+        if (!$this->checkAdminAccess(AccessManager::UPDATE)) {
+            return new RedirectResponse(
+                URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['error' => 'Access denied'])
+            );
         }
 
         try {
@@ -79,13 +103,6 @@ class ConfigurationController extends BaseAdminController
             CawlPayment::setConfigValue('min_amount', $formData['min_amount'] ?? '0');
             CawlPayment::setConfigValue('max_amount', $formData['max_amount'] ?? '0');
 
-            // Log admin action
-            $this->adminLogAppend(
-                'cawlpayment.configuration',
-                AccessManager::UPDATE,
-                'CAWL Payment configuration updated'
-            );
-
             return new RedirectResponse(
                 URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['success' => '1'])
             );
@@ -102,13 +119,7 @@ class ConfigurationController extends BaseAdminController
      */
     public function paymentProductsAction(Request $request): JsonResponse
     {
-        // Check if user is logged in to admin
-        if (!$this->getSecurityContext()->hasAdminUser()) {
-            return new JsonResponse(['success' => false, 'error' => 'Not authenticated'], 401);
-        }
-
-        // Check module access permission
-        if (null !== $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess(AccessManager::VIEW)) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
@@ -136,13 +147,7 @@ class ConfigurationController extends BaseAdminController
      */
     public function testConnectionAction(Request $request): JsonResponse
     {
-        // Check if user is logged in to admin
-        if (!$this->getSecurityContext()->hasAdminUser()) {
-            return new JsonResponse(['success' => false, 'error' => 'Not authenticated'], 401);
-        }
-
-        // Check module access permission
-        if (null !== $this->checkAuth(AdminResources::MODULE, 'CawlPayment', AccessManager::VIEW)) {
+        if (!$this->checkAdminAccess(AccessManager::VIEW)) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
