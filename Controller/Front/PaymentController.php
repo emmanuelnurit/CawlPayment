@@ -7,6 +7,7 @@ namespace CawlPayment\Controller\Front;
 use CawlPayment\CawlPayment;
 use CawlPayment\Model\CawlTransactionQuery;
 use CawlPayment\Service\CawlApiService;
+use CawlPayment\Service\OrderSignatureService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -27,13 +28,16 @@ class PaymentController extends BaseFrontController
 {
     private EventDispatcherInterface $dispatcher;
     private CawlApiService $apiService;
+    private OrderSignatureService $signatureService;
 
     public function __construct(
         EventDispatcherInterface $dispatcher,
-        CawlApiService $apiService
+        CawlApiService $apiService,
+        OrderSignatureService $signatureService
     ) {
         $this->dispatcher = $dispatcher;
         $this->apiService = $apiService;
+        $this->signatureService = $signatureService;
     }
     /**
      * Initiate payment process
@@ -72,8 +76,9 @@ class PaymentController extends BaseFrontController
             $apiService = $this->apiService;
 
             // Build return URLs
+            // L'order_id est signe (HMAC) pour empecher sa manipulation dans l'URL de retour
             $baseUrl = URL::getInstance()->absoluteUrl('');
-            $returnUrl = $baseUrl . '/cawlpayment/success?order_id=' . $orderId;
+            $returnUrl = $this->signatureService->buildSignedUrl($baseUrl . '/cawlpayment/success', $orderId);
             $webhookUrl = $baseUrl . '/cawlpayment/webhook';
 
             // Create hosted checkout
@@ -109,6 +114,11 @@ class PaymentController extends BaseFrontController
         $hostedCheckoutId = $request->query->get('hostedCheckoutId');
 
         if (!$orderId) {
+            return $this->pageNotFound();
+        }
+
+        // Verify the HMAC signature of order_id before processing the return
+        if (!$this->verifyOrderSignature($request, 'success')) {
             return $this->pageNotFound();
         }
 
@@ -181,6 +191,11 @@ class PaymentController extends BaseFrontController
             return $this->pageNotFound();
         }
 
+        // Verify the HMAC signature of order_id before processing the return
+        if (!$this->verifyOrderSignature($request, 'failure')) {
+            return $this->pageNotFound();
+        }
+
         $order = OrderQuery::create()->findPk($orderId);
         if (!$order) {
             return $this->pageNotFound();
@@ -216,6 +231,11 @@ class PaymentController extends BaseFrontController
         $orderId = $request->query->get('order_id');
 
         if (!$orderId) {
+            return $this->pageNotFound();
+        }
+
+        // Verify the HMAC signature of order_id before processing the return
+        if (!$this->verifyOrderSignature($request, 'cancel')) {
             return $this->pageNotFound();
         }
 
@@ -292,6 +312,30 @@ class PaymentController extends BaseFrontController
                 'error' => 'Payment status check failed',
             ], 500);
         }
+    }
+
+    /**
+     * Verify the HMAC signature carried by a return URL
+     *
+     * L'order_id transite en clair dans l'URL de retour du PSP : sans signature,
+     * il pourrait etre remplace par celui d'une autre commande.
+     *
+     * @param Request $request La requete de retour
+     * @param string $context Le nom du callback (pour la journalisation)
+     * @return bool True si la signature est valide
+     */
+    private function verifyOrderSignature(Request $request, string $context): bool
+    {
+        if ($this->signatureService->verifyRequest($request)) {
+            return true;
+        }
+
+        \Thelia\Log\Tlog::getInstance()->warning(
+            '[CawlPayment] Invalid or expired signature on ' . $context . ' return URL for order #' .
+            $request->query->get(OrderSignatureService::PARAM_ORDER_ID)
+        );
+
+        return false;
     }
 
     /**

@@ -8,6 +8,7 @@ use CawlPayment\Hook\FrontHook;
 use CawlPayment\Service\CawlApiService;
 use CawlPayment\Service\CredentialsEncryptionService;
 use CawlPayment\Service\CsrfTokenService;
+use CawlPayment\Service\OrderSignatureService;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -124,6 +125,11 @@ class CawlPayment extends AbstractPaymentModule
             ->autowire(true)
             ->public();
 
+        // OrderSignatureService doit être public pour signer l'URL de retour depuis pay()
+        $servicesConfigurator->set(OrderSignatureService::class)
+            ->autowire(true)
+            ->public();
+
         // FrontHook nécessite l'injection de CawlApiService via le constructeur
         $servicesConfigurator->set('cawlpayment.hook.front', FrontHook::class)
             ->autowire(true)
@@ -140,9 +146,16 @@ class CawlPayment extends AbstractPaymentModule
             /** @var CawlApiService $apiService */
             $apiService = $this->getContainer()->get(CawlApiService::class);
 
+            /** @var OrderSignatureService $signatureService */
+            $signatureService = $this->getContainer()->get(OrderSignatureService::class);
+
             // Build return URL - success callback
+            // L'order_id est signe (HMAC) pour empecher sa manipulation dans l'URL de retour
             $baseUrl = \Thelia\Model\ConfigQuery::read('url_site', '');
-            $returnUrl = rtrim($baseUrl, '/') . '/cawlpayment/success?order_id=' . $order->getId();
+            $returnUrl = $signatureService->buildSignedUrl(
+                rtrim($baseUrl, '/') . '/cawlpayment/success',
+                (int) $order->getId()
+            );
             $webhookUrl = rtrim($baseUrl, '/') . '/cawlpayment/webhook';
 
             // Create hosted checkout (without specific payment method - user will choose on CAWL page)

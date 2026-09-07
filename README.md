@@ -9,6 +9,7 @@ Module de paiement intégrant la passerelle **CAWL Solutions / Worldline** pour 
 - [Installation](#installation)
 - [Configuration](#configuration)
   - [Variable d'environnement CAWL_ENCRYPTION_KEY](#0-variable-denvironnement-cawl_encryption_key-obligatoire-en-production)
+  - [Variable d'environnement CAWL_URL_SIGNATURE_KEY](#0-bis-variable-denvironnement-cawl_url_signature_key-recommandée)
   - [Identifiants API](#1-identifiants-api)
   - [Méthodes de paiement](#2-méthodes-de-paiement)
   - [Options](#3-options)
@@ -134,6 +135,26 @@ Règles importantes :
 - En environnements `dev` et `test` uniquement, le module conserve un repli : la clé est générée
   automatiquement et persistée en configuration Thelia, avec un avertissement dans les logs.
   Tout environnement non reconnu (ou `APP_ENV` non défini) est traité comme de la production.
+
+### 0 bis. Variable d'environnement `CAWL_URL_SIGNATURE_KEY` (recommandée)
+
+L'`order_id` transite en clair dans l'URL de retour du PSP (`/cawlpayment/success?order_id=...`).
+Pour empêcher sa manipulation, le module y ajoute une date d'expiration et une signature
+**HMAC-SHA256** (`expires` et `sig`), vérifiées à chaque retour (`success`, `failure`, `cancel`)
+avant tout traitement.
+
+La clé de signature est lue dans `CAWL_URL_SIGNATURE_KEY` :
+
+```bash
+CAWL_URL_SIGNATURE_KEY=$(php -r "echo base64_encode(random_bytes(32)), PHP_EOL;")
+```
+
+À défaut, le module génère une clé et la persiste dans la configuration Thelia
+`cawl_url_signature_key` (avertissement dans les logs). Cette clé doit rester stable : la modifier
+invalide les URLs de retour des paiements déjà en cours (le client est alors redirigé vers une 404,
+mais le webhook confirme malgré tout la commande).
+
+La durée de validité d'une URL de retour est de 24 heures.
 
 ### 1. Identifiants API
 
@@ -466,6 +487,8 @@ Format des logs :
 ### Bonnes pratiques implémentées
 
 - **Validation HMAC-SHA256** des webhooks
+- **Signature HMAC-SHA256 de l'`order_id`** dans les URLs de retour, avec expiration
+  (voir [`CAWL_URL_SIGNATURE_KEY`](#0-bis-variable-denvironnement-cawl_url_signature_key-recommandée))
 - **Chiffrement AES-256-GCM** des credentials en base, avec clé obligatoire en production
   (voir [`CAWL_ENCRYPTION_KEY`](#0-variable-denvironnement-cawl_encryption_key-obligatoire-en-production))
 - **Pas d'exposition des erreurs internes** aux utilisateurs
