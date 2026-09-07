@@ -1,0 +1,221 @@
+{extends file="admin-layout.tpl"}
+
+{block name="no-return-functions"}
+    {$admin_current_location = 'modules'}
+{/block}
+
+{block name="check-resource"}admin.module{/block}
+{block name="check-module"}CawlPayment{/block}
+{block name="check-access"}view{/block}
+
+{block name="page-title"}{intl d='cawlpayment' l='CAWL Payment - API Test Dashboard'}{/block}
+
+{block name="after-admin-css"}
+    <style>
+        .cawl-test-config-table { width: 100%; border-collapse: collapse; }
+        .cawl-test-config-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .cawl-test-config-table td:first-child { font-weight: bold; width: 220px; }
+        .cawl-test-result pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .cawl-test-loading { color: #666; font-style: italic; }
+    </style>
+{/block}
+
+{block name="main-content"}
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="general-block-decorator">
+                <div class="title title-without-tabs">
+                    {intl d='cawlpayment' l='Current Configuration'}
+                </div>
+
+                <table class="cawl-test-config-table">
+                    <tr>
+                        <td>{intl d='cawlpayment' l='Environment'}</td>
+                        <td>{$config.environment|escape}</td>
+                    </tr>
+                    <tr>
+                        <td>{intl d='cawlpayment' l='Endpoint'}</td>
+                        <td>{$config.endpoint|escape}</td>
+                    </tr>
+                    <tr>
+                        <td>{intl d='cawlpayment' l='Merchant ID (PSPID)'}</td>
+                        <td>
+                            {if $config.merchant_id}
+                                {$config.merchant_id|escape}
+                            {else}
+                                <span class="text-danger">{intl d='cawlpayment' l='Not configured'}</span>
+                            {/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{intl d='cawlpayment' l='API Key'}</td>
+                        <td class="{if $config.api_key_configured}text-success{else}text-danger{/if}">
+                            {if $config.api_key_configured}
+                                {intl d='cawlpayment' l='Configured'}
+                            {else}
+                                {intl d='cawlpayment' l='Not configured'}
+                            {/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{intl d='cawlpayment' l='API Secret'}</td>
+                        <td class="{if $config.api_secret_configured}text-success{else}text-danger{/if}">
+                            {if $config.api_secret_configured}
+                                {intl d='cawlpayment' l='Configured'}
+                            {else}
+                                {intl d='cawlpayment' l='Not configured'}
+                            {/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{intl d='cawlpayment' l='Logging'}</td>
+                        <td>
+                            {if $config.logging_enabled}
+                                {intl d='cawlpayment' l='Enabled'}
+                            {else}
+                                {intl d='cawlpayment' l='Disabled'}
+                            {/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{intl d='cawlpayment' l='Enabled Methods'}</td>
+                        <td>
+                            {if $enabled_methods}
+                                {$enabled_methods|escape}
+                            {else}
+                                <span class="text-warning">{intl d='cawlpayment' l='None'}</span>
+                            {/if}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="general-block-decorator">
+                <div class="title title-without-tabs">
+                    {intl d='cawlpayment' l='API Tests'}
+                </div>
+
+                <button type="button" class="btn btn-primary" id="cawl-test-connection">
+                    {intl d='cawlpayment' l='Test Connection'}
+                </button>
+                <button type="button" class="btn btn-primary" id="cawl-test-products">
+                    {intl d='cawlpayment' l='Get Payment Products'}
+                </button>
+                <button type="button" class="btn btn-success" id="cawl-test-create-checkout">
+                    {intl d='cawlpayment' l='Create Test Checkout (10 EUR)'}
+                </button>
+
+                <div id="cawl-test-result" class="cawl-test-result"></div>
+            </div>
+
+            <div class="general-block-decorator">
+                <div class="title title-without-tabs">
+                    {intl d='cawlpayment' l='Manual Tests'}
+                </div>
+
+                <p>{intl d='cawlpayment' l='Check a specific checkout status:'}</p>
+                <div class="form-inline">
+                    <input type="text" id="cawl-test-checkout-id" class="form-control"
+                           placeholder="{intl d='cawlpayment' l='Hosted Checkout ID'}">
+                    <button type="button" class="btn btn-warning" id="cawl-test-check-status">
+                        {intl d='cawlpayment' l='Check Status'}
+                    </button>
+                </div>
+            </div>
+
+            <div class="general-block-decorator">
+                <a href="{url path='/admin/module/CawlPayment'}">
+                    &larr; {intl d='cawlpayment' l='Back to Configuration'}
+                </a>
+            </div>
+
+        </div>
+    </div>
+{/block}
+
+{block name="javascript-last-call"}
+    <script>
+        (function () {
+            var urls = {
+                connection: "{url path='/admin/cawlpayment/api-test/connection'}",
+                products: "{url path='/admin/cawlpayment/api-test/products'}",
+                createCheckout: "{url path='/admin/cawlpayment/api-test/create-checkout'}",
+                checkoutStatus: "{url path='/admin/cawlpayment/api-test/checkout-status'}"
+            };
+
+            var messages = {
+                loading: "{intl d='cawlpayment' l='Loading...'}",
+                openCheckout: "{intl d='cawlpayment' l='Checkout created! Open payment page in new tab?'}",
+                missingCheckoutId: "{intl d='cawlpayment' l='Please enter a Hosted Checkout ID'}"
+            };
+
+            var resultDiv = document.getElementById('cawl-test-result');
+
+            function showResult(data, isError) {
+                var pre = document.createElement('pre');
+                if (isError) {
+                    pre.className = 'text-danger';
+                }
+                pre.textContent = JSON.stringify(data, null, 2);
+                resultDiv.innerHTML = '';
+                resultDiv.appendChild(pre);
+            }
+
+            function showLoading() {
+                resultDiv.innerHTML = '';
+                var p = document.createElement('p');
+                p.className = 'cawl-test-loading';
+                p.textContent = messages.loading;
+                resultDiv.appendChild(p);
+            }
+
+            function call(url, method) {
+                showLoading();
+                return fetch(url, { method: method || 'GET', credentials: 'same-origin' })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        showResult(data, !data.success);
+                        return data;
+                    })
+                    .catch(function (e) {
+                        showResult({ error: e.message }, true);
+                    });
+            }
+
+            function fetchStatus(checkoutId) {
+                if (!checkoutId) {
+                    alert(messages.missingCheckoutId);
+                    return;
+                }
+                call(urls.checkoutStatus + '/' + encodeURIComponent(checkoutId));
+            }
+
+            document.getElementById('cawl-test-connection').addEventListener('click', function () {
+                call(urls.connection, 'POST');
+            });
+
+            document.getElementById('cawl-test-products').addEventListener('click', function () {
+                call(urls.products);
+            });
+
+            document.getElementById('cawl-test-create-checkout').addEventListener('click', function () {
+                call(urls.createCheckout, 'POST').then(function (data) {
+                    if (data && data.success && data.redirectUrl && confirm(messages.openCheckout)) {
+                        window.open(data.redirectUrl, '_blank');
+                    }
+                });
+            });
+
+            document.getElementById('cawl-test-check-status').addEventListener('click', function () {
+                fetchStatus(document.getElementById('cawl-test-checkout-id').value);
+            });
+        })();
+    </script>
+{/block}

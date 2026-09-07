@@ -1,0 +1,56 @@
+{extends file="admin-layout.tpl"}
+
+{block name="no-return-functions"}
+    {$admin_current_location = 'modules'}
+{/block}
+
+{block name="check-resource"}admin.module{/block}
+{block name="check-module"}CawlPayment{/block}
+{block name="check-access"}view{/block}
+
+{block name="page-title"}{intl d='cawlpayment' l='CAWL Payment - Test Return Page'}{/block}
+
+{block name="after-admin-css"}
+    <style>
+        .cawl-test-return pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+{/block}
+
+{block name="main-content"}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="general-block-decorator cawl-test-return">
+                <div class="title title-without-tabs">
+                    {intl d='cawlpayment' l='CAWL Payment - Test Return Page'}
+                </div>
+
+                {if $error}
+                    <div class="alert alert-danger">
+                        {intl d='cawlpayment' l='Error:'} {$error|escape}
+                    </div>
+                {elseif $has_status}
+                    <p class="{if $is_paid}text-success{else}text-info{/if}">
+                        {intl d='cawlpayment' l='Status:'} {$status_label|escape}
+                    </p>
+                    <h3>{intl d='cawlpayment' l='Full Response:'}</h3>
+                    <pre>{$status_json|escape}</pre>
+                {else}
+                    <div class="alert alert-info">
+                        {intl d='cawlpayment' l='No hosted checkout ID provided.'}
+                    </div>
+                {/if}
+            </div>
+
+            <div class="general-block-decorator">
+                <a href="{url path='/admin/module/CawlPayment'}">
+                    &larr; {intl d='cawlpayment' l='Back to Configuration'}
+                </a>
+            </div>
+        </div>
+    </div>
+{/block}

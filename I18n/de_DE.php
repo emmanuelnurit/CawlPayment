@@ -267,4 +267,14 @@ return [
     // Security messages
     'Invalid security token. Please try again.' => 'Ungültiges Sicherheitstoken. Bitte versuchen Sie es erneut.',
     'Invalid environment value. Allowed values: test, production.' => 'Ungültiger Umgebungswert. Erlaubte Werte: test, production.',
+
+    // Test dashboard
+    'CAWL Payment - API Test Dashboard' => 'CAWL Payment - API-Test-Dashboard',
+    'CAWL Payment - Test Return Page' => 'CAWL Payment - Test-Rückkehrseite',
+    'Merchant ID (PSPID)' => 'Händler-ID (PSPID)',
+    'Create Test Checkout (10 EUR)' => 'Test-Zahlung erstellen (10 EUR)',
+    'Check a specific checkout status:' => 'Status einer bestimmten Zahlung prüfen:',
+    'Status:' => 'Status:',
+    'Error:' => 'Fehler:',
+    'Unknown' => 'Unbekannt',
 ];
