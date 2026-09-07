@@ -8,6 +8,7 @@ Module de paiement intégrant la passerelle **CAWL Solutions / Worldline** pour 
 - [Prérequis](#prérequis)
 - [Installation](#installation)
 - [Configuration](#configuration)
+  - [Variable d'environnement CAWL_ENCRYPTION_KEY](#0-variable-denvironnement-cawl_encryption_key-obligatoire-en-production)
   - [Identifiants API](#1-identifiants-api)
   - [Méthodes de paiement](#2-méthodes-de-paiement)
   - [Options](#3-options)
@@ -95,6 +96,44 @@ local/modules/CawlPayment/
 ## Configuration
 
 Accédez à la configuration via : **Administration > Modules > CawlPayment > Configurer**
+
+### 0. Variable d'environnement `CAWL_ENCRYPTION_KEY` (obligatoire en production)
+
+Les identifiants sensibles (API keys, secrets, clés webhook) sont chiffrés en AES-256-GCM avant
+d'être stockés en base. La clé de chiffrement est lue dans la variable d'environnement
+`CAWL_ENCRYPTION_KEY`.
+
+**En production (`APP_ENV=prod`), cette variable est obligatoire** : si elle est absente, le module
+lève une `RuntimeException` au lieu de générer une clé et de la stocker en clair en base de données.
+
+Génération d'une clé (32 octets encodés en base64) :
+
+```bash
+php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+```
+
+Déclaration (dans `.env.local`, la configuration du vhost, ou l'environnement du service PHP-FPM) :
+
+```bash
+CAWL_ENCRYPTION_KEY=<clé base64 générée>
+```
+
+Règles importantes :
+
+- **Ne jamais commiter** cette clé ; elle donne accès aux credentials CAWL en clair.
+- **Ne jamais la modifier** une fois des credentials chiffrés enregistrés : les valeurs existantes
+  deviendraient indéchiffrables (il faudrait ressaisir les identifiants dans le back-office).
+- **Migration d'une installation existante** : si une clé avait été auto-générée avant cette version,
+  elle se trouve dans la configuration Thelia `cawl_encryption_key`. Reprenez cette valeur telle
+  quelle dans `CAWL_ENCRYPTION_KEY` avant de passer en production, puis supprimez l'entrée en base.
+
+  ```bash
+  ddev mysql -N -e "SELECT value FROM config WHERE name = 'cawl_encryption_key'"
+  ```
+
+- En environnements `dev` et `test` uniquement, le module conserve un repli : la clé est générée
+  automatiquement et persistée en configuration Thelia, avec un avertissement dans les logs.
+  Tout environnement non reconnu (ou `APP_ENV` non défini) est traité comme de la production.
 
 ### 1. Identifiants API
 
@@ -427,6 +466,8 @@ Format des logs :
 ### Bonnes pratiques implémentées
 
 - **Validation HMAC-SHA256** des webhooks
+- **Chiffrement AES-256-GCM** des credentials en base, avec clé obligatoire en production
+  (voir [`CAWL_ENCRYPTION_KEY`](#0-variable-denvironnement-cawl_encryption_key-obligatoire-en-production))
 - **Pas d'exposition des erreurs internes** aux utilisateurs
 - **Journalisation sécurisée** (pas de credentials dans les logs)
 - **Injection de dépendances** pour les services
@@ -435,11 +476,12 @@ Format des logs :
 
 ### Recommandations
 
-1. **Désactivez les logs** en production
-2. **Utilisez HTTPS** obligatoirement
-3. **Configurez le Webhook Secret** en production
-4. **Limitez les accès** au back-office
-5. **Mettez à jour** régulièrement le module
+1. **Définissez `CAWL_ENCRYPTION_KEY`** dans l'environnement serveur (obligatoire en production)
+2. **Désactivez les logs** en production
+3. **Utilisez HTTPS** obligatoirement
+4. **Configurez le Webhook Secret** en production
+5. **Limitez les accès** au back-office
+6. **Mettez à jour** régulièrement le module
 
 ---
 

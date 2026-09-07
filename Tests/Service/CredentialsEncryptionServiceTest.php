@@ -349,4 +349,84 @@ class CredentialsEncryptionServiceTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $newService->decrypt($encrypted);
     }
+
+    // =========================================================================
+    // Tests de la cle obligatoire en production
+    // =========================================================================
+
+    public function testMissingKeyInProductionThrowsException(): void
+    {
+        $this->removeEnvironmentKey();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/CAWL_ENCRYPTION_KEY.*obligatoire/s');
+
+        new CredentialsEncryptionService('prod');
+    }
+
+    public function testMissingKeyInProductionDoesNotFallBackToDatabaseKey(): void
+    {
+        $this->removeEnvironmentKey();
+        ConfigQueryMock::write('cawl_encryption_key', base64_encode(random_bytes(32)));
+
+        $this->expectException(\RuntimeException::class);
+
+        new CredentialsEncryptionService('prod');
+    }
+
+    public function testUnknownEnvironmentIsTreatedAsProduction(): void
+    {
+        $this->removeEnvironmentKey();
+
+        $this->expectException(\RuntimeException::class);
+
+        new CredentialsEncryptionService('staging');
+    }
+
+    public function testMissingKeyInDevGeneratesAndPersistsKey(): void
+    {
+        $this->removeEnvironmentKey();
+
+        $service = new CredentialsEncryptionService('dev');
+
+        $this->assertFalse($service->isProduction(), 'L\'environnement dev ne doit pas etre considere comme production');
+        $this->assertNotEmpty(
+            ConfigQueryMock::read('cawl_encryption_key', ''),
+            'Une cle doit etre generee et persistee en environnement dev'
+        );
+        $this->assertSame('secret', $service->decrypt($service->encrypt('secret')));
+    }
+
+    public function testMissingKeyInTestEnvironmentUsesFallback(): void
+    {
+        $this->removeEnvironmentKey();
+
+        $service = new CredentialsEncryptionService('test');
+
+        $this->assertFalse($service->isProduction());
+        $this->assertSame('secret', $service->decrypt($service->encrypt('secret')));
+    }
+
+    public function testEnvironmentKeyIsUsedInProduction(): void
+    {
+        $key = base64_encode(random_bytes(32));
+        putenv('CAWL_ENCRYPTION_KEY=' . $key);
+
+        $service = new CredentialsEncryptionService('prod');
+
+        $this->assertTrue($service->isProduction());
+
+        // La meme cle doit permettre de dechiffrer depuis un autre service
+        $other = new CredentialsEncryptionService('prod');
+        $this->assertSame('secret', $other->decrypt($service->encrypt('secret')));
+    }
+
+    /**
+     * Supprime la cle de chiffrement de toutes les sources d'environnement
+     */
+    private function removeEnvironmentKey(): void
+    {
+        putenv('CAWL_ENCRYPTION_KEY');
+        unset($_ENV['CAWL_ENCRYPTION_KEY'], $_SERVER['CAWL_ENCRYPTION_KEY']);
+    }
 }

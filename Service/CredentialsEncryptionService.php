@@ -22,6 +22,12 @@ class CredentialsEncryptionService
     private const TAG_LENGTH = 16;
 
     /**
+     * Environnements ou une cle auto-generee / stockee en base est toleree.
+     * Tout autre environnement (prod par defaut) exige CAWL_ENCRYPTION_KEY.
+     */
+    private const NON_PRODUCTION_ENVS = ['dev', 'test'];
+
+    /**
      * Liste des cles de configuration sensibles qui doivent etre chiffrees
      */
     private const SENSITIVE_KEYS = [
@@ -37,9 +43,44 @@ class CredentialsEncryptionService
 
     private ?string $encryptionKey = null;
 
-    public function __construct()
+    private string $environment;
+
+    /**
+     * @param string|null $environment Environnement applicatif ('prod', 'dev', 'test').
+     *                                 Si null, il est detecte depuis APP_ENV / THELIA_ENV
+     *                                 et vaut 'prod' par defaut (fail-safe).
+     */
+    public function __construct(?string $environment = null)
     {
+        $this->environment = strtolower($environment ?? self::detectEnvironment());
         $this->initializeKey();
+    }
+
+    /**
+     * Indique si le service tourne dans un environnement de production
+     */
+    public function isProduction(): bool
+    {
+        return !in_array($this->environment, self::NON_PRODUCTION_ENVS, true);
+    }
+
+    /**
+     * Detecte l'environnement applicatif.
+     *
+     * En l'absence d'information, on considere l'environnement comme production
+     * afin de ne jamais desactiver silencieusement les controles de securite.
+     */
+    private static function detectEnvironment(): string
+    {
+        foreach (['APP_ENV', 'THELIA_ENV', 'SYMFONY_ENV'] as $var) {
+            $value = $_ENV[$var] ?? $_SERVER[$var] ?? getenv($var);
+
+            if (is_string($value) && $value !== '') {
+                return $value;
+            }
+        }
+
+        return 'prod';
     }
 
     /**
@@ -226,18 +267,34 @@ class CredentialsEncryptionService
 
     /**
      * Initialise la cle de chiffrement depuis l'environnement ou la configuration
+     *
+     * @throws \RuntimeException En production, si CAWL_ENCRYPTION_KEY n'est pas definie
      */
     private function initializeKey(): void
     {
-        // Priorite 1: Variable d'environnement (recommande pour la production)
-        $key = getenv(self::KEY_ENV_VAR);
+        // Priorite 1: Variable d'environnement (obligatoire en production)
+        $key = $_ENV[self::KEY_ENV_VAR] ?? $_SERVER[self::KEY_ENV_VAR] ?? getenv(self::KEY_ENV_VAR);
 
-        if (!empty($key) && $key !== false) {
+        if (is_string($key) && $key !== '') {
             $this->encryptionKey = $key;
             return;
         }
 
-        // Priorite 2: Cle stockee en configuration Thelia
+        // En production, aucun repli n'est autorise: une cle stockee en base ou
+        // auto-generee est conservee en clair et casse la garantie de chiffrement.
+        if ($this->isProduction()) {
+            throw new \RuntimeException(sprintf(
+                'CawlPayment: la variable d\'environnement %s est obligatoire en environnement "%s". '
+                . 'Generez une cle avec "php -r \'echo base64_encode(random_bytes(32));\'" et definissez-la '
+                . 'dans l\'environnement du serveur. Si une cle avait deja ete auto-generee, reprenez la valeur '
+                . 'de la configuration Thelia "%s" pour ne pas perdre l\'acces aux credentials chiffres.',
+                self::KEY_ENV_VAR,
+                $this->environment,
+                self::CONFIG_KEY_NAME
+            ));
+        }
+
+        // Priorite 2 (dev/test uniquement): cle stockee en configuration Thelia
         try {
             $existingKey = ConfigQuery::read(self::CONFIG_KEY_NAME, '');
 
@@ -252,15 +309,15 @@ class CredentialsEncryptionService
             );
         }
 
-        // Priorite 3: Generer une nouvelle cle (developpement uniquement)
+        // Priorite 3 (dev/test uniquement): generer une nouvelle cle
         $newKey = base64_encode(random_bytes(32));
 
         try {
             ConfigQuery::write(self::CONFIG_KEY_NAME, $newKey);
 
             Tlog::getInstance()->warning(
-                '[CawlPayment] Generated new encryption key. ' .
-                'For production, set CAWL_ENCRYPTION_KEY environment variable.'
+                '[CawlPayment] Generated new encryption key for environment "' . $this->environment . '". ' .
+                'This fallback is disabled in production: set the CAWL_ENCRYPTION_KEY environment variable.'
             );
 
             $this->encryptionKey = $newKey;
